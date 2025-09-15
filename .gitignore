@@ -1,0 +1,11 @@
+.env
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+
+.astro/                # Local Astro CLI state
+.dockerignore
+logs/
+plugins/__pycache__/

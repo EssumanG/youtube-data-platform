@@ -1,0 +1,60 @@
+services:
+
+  # Astro default Services
+  dag-processor:
+    container_name: dag-processor
+    networks:
+      - mini-proj_6dcc03_airflow
+      - project_net
+
+  api-server:
+    container_name: api-server
+    networks:
+      - mini-proj_6dcc03_airflow
+      - project_net
+
+  scheduler:
+    container_name: scheduler
+
+  triggerer:
+    container_name: triggerer
+
+  postgres:
+    container_name: postgres
+
+  
+  # Custom Services
+  postgres-db:
+    image: postgres:14
+    container_name: postgres-db
+    restart: on-failure
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE:-test_database}
+      POSTGRES_USER: ${POSTGRES_USER:-test_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test_password1234}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5436}:5432"
+    volumes:
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - project_net
+
+  # minio_datalake:
+  #   container_name: minio_datalake
+  #   networks:
+  #     - project_net
+
+  
+
+networks:
+  mini-proj_6dcc03_airflow:
+    external: True
+
+  project_net:
+    name: project_net
+    driver: bridge
+
+
+volumes:
+  postgres-data:
