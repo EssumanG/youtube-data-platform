@@ -40,12 +40,43 @@ services:
     networks:
       - project_net
 
-  # minio_datalake:
-  #   container_name: minio_datalake
-  #   networks:
-  #     - project_net
+  minio:
+    # container_name: minio
+    image: minio/minio:latest
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWARD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio-data:/data
+    networks:
+      - project_net
 
-  
+  mc:
+    # container_name: mc
+    image: minio/mc:latest
+    restart: on-failure
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWARD} &&
+      /usr/bin/mc mb --ignore-existing myminio/${MINIO_BUCKET_NAME} &&
+      /usr/bin/mc policy set public myminio/${MINIO_BUCKET_NAME} &&
+      tail -f /dev/null
+      "
+    networks:
+      - project_net
 
 networks:
   mini-proj_6dcc03_airflow:

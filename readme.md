@@ -26,7 +26,7 @@ git clone https://github.com/your-username/mini-data-platform.git
 cd mini-data-platform
 ```
 3. Set envronment variables.
-Create a .env file in the project root directory and copy the evnironment in the the .env.example and paste in the .env file
+Create a .env file in the project root directory and copy the evnironment in the the **`example.env`** and paste in the .env file
 
 4. Start the platform
 ```

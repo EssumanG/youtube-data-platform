@@ -9,3 +9,6 @@ __pycache__/
 .dockerignore
 logs/
 plugins/__pycache__/
+
+minio-data
+
