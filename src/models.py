@@ -112,7 +112,7 @@ class Initiator:
 
 
 def write_videos_to_csv(videos: List[YouTubeVideo]):
-    filename = f"vidoes_data__{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    filename = f"vidoes_data__{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     with open(filename, mode="a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["video_id", "channel_id", "description", "total_views", "total_likes", "total_dislikes", "date_created"])
@@ -123,6 +123,10 @@ def write_videos_to_csv(videos: List[YouTubeVideo]):
 if __name__ == "__main__":
     initiator = Initiator()
     initiator.setup()
+    buffer = []
+    last_flush = time.time()
+    BATCH_INTERVAL = 300  #10 minutes
+
 
     while True:
         # update stats
@@ -130,10 +134,17 @@ if __name__ == "__main__":
 
         # maybe create new channels/videos
         new_vidoes = initiator.maybe_add_channel_or_video()
+        buffer.extend(new_updates + new_vidoes)
    
-        # write snapshot of all videos to CSV
-        write_videos_to_csv(new_updates + new_vidoes)
+        # check if 10 minutes have passed
+        if time.time() - last_flush >= BATCH_INTERVAL:
+            if buffer:
+                write_videos_to_csv(buffer)
+                print(f"flushed {len(buffer)} updates to CSV at {datetime.datetime.now()}")
+                buffer.clear()
+            last_flush = time.time()  # reset timer
 
-        print(f"Snapshot saved with {len(initiator.videos)} videos, {len(initiator.channels)} channels")
+        print(f"Buffered {len(buffer)} updates so far "
+              f"(total: {len(initiator.videos)} videos, {len(initiator.channels)} channels)")
 
-        time.sleep(10)  # wait before next update
+        time.sleep(random.randint(10, 30))  # wait before next update
