@@ -9,8 +9,8 @@ from faker import Faker
 fake = Faker()
 
 class Simulator:
-    number_of_channels = 4
-    max_number_videos = 3
+    number_of_channels = 20
+    max_number_videos = 10
     videos: List[YouTubeVideo] = []
     channels: List[YoutubeChannel] = []
 

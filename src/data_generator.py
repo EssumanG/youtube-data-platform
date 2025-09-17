@@ -4,7 +4,7 @@ import random
 import uuid
 import time
 from simulator import Simulator
-from utils import write_videos_to_csv
+from utils import write_videos_to_csv, connect_minio
 import datetime
 
 
@@ -20,7 +20,8 @@ if __name__ == "__main__":
     simulator.setup()
     buffer = []
     last_flush = time.time()
-    BATCH_INTERVAL = 300  #10 minutes
+    BATCH_INTERVAL = 100  #10 minutes
+    minio_client = connect_minio()
 
 
     while True:
@@ -34,7 +35,7 @@ if __name__ == "__main__":
         # check if 10 minutes have passed
         if time.time() - last_flush >= BATCH_INTERVAL:
             if buffer:
-                write_videos_to_csv(buffer)
+                write_videos_to_csv(buffer, minio_client=minio_client)
                 print(f"flushed {len(buffer)} updates to CSV at {datetime.datetime.now()}")
                 buffer.clear()
             last_flush = time.time()  # reset timer

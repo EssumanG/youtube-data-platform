@@ -1,2 +1,4 @@
 project:
     name: mini-proj
+postgres:
+  port: 0

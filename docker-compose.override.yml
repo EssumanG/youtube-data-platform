@@ -21,6 +21,8 @@ services:
 
   postgres:
     container_name: postgres
+    ports:
+      - "5433:5432"
 
   
   # Custom Services
@@ -53,8 +55,8 @@ services:
       retries: 5
       start_period: 20s
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9100:9000"
+      - "9101:9001"
     command: server /data --console-address ":9001"
     volumes:
       - ./minio-data:/data
