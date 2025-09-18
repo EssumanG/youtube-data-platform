@@ -89,7 +89,6 @@ def youtube_pipeline():
         df["date_created"] = pd.to_datetime(df["date_created"])
         df["date_updated"] = pd.to_datetime(df["date_updated"])
         df = df.set_index("date_updated")
-        # df = df[["video_id", "description", "channel_name", "total_views", "total_likes", "total_dislikes"]]
 
         trend_30s = (
             df.groupby(["description", "channel_name"]).resample("30S")
@@ -112,8 +111,35 @@ def youtube_pipeline():
                 avg_dislikes=("total_dislikes", "mean")
             )
         )
+    # Define output paths in MinIO
+        trend_path = "transformed/trend_30s.csv"
+        stats_path = "transformed/channel_stats.csv"
 
-        return trend_30s, channel_stats
+        # Save back to MinIO
+        trend_30s.to_csv(
+            f"s3://{MINIO_BUCKET_NAME}/{trend_path}",
+            index=False,
+            storage_options={
+                "key": MINIO_ROOT_USER,
+                "secret": MINIO_ROOT_PASSWARD,
+                "client_kwargs": {"endpoint_url": endpoint_url},
+            },
+        )
+        channel_stats.to_csv(
+            f"s3://{MINIO_BUCKET_NAME}/{stats_path}",
+            index=False,
+            storage_options={
+                "key": MINIO_ROOT_USER,
+                "secret": MINIO_ROOT_PASSWARD,
+                "client_kwargs": {"endpoint_url": endpoint_url},
+            },
+        )
+
+        # Return only paths for downstream tasks
+        return {
+            "trend_30s_path": trend_path,
+            "channel_stats_path": stats_path,
+        }
 
 
 
