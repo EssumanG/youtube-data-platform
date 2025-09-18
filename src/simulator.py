@@ -4,13 +4,13 @@ import random
 import uuid
 import time
 from faker import Faker
-
+import datetime
 
 fake = Faker()
 
 class Simulator:
-    number_of_channels = 20
-    max_number_videos = 10
+    number_of_channels = 2
+    max_number_videos = 2
     videos: List[YouTubeVideo] = []
     channels: List[YoutubeChannel] = []
 
@@ -28,28 +28,32 @@ class Simulator:
         print("Setting up videos...")
         for channel in cls.channels:
             for _ in range(random.randint(1, cls.max_number_videos)):
-                cls.videos.append(cls.create_video(channel.channel_id))
+                cls.videos.append(cls.create_video(channel))
 
     @classmethod
     def create_channel(cls) -> YoutubeChannel:
         channel = YoutubeChannel(
             channel_id=str(uuid.uuid4()),
             name=fake.company(),
-            subscribers=random.randint(2, 50),  # new channels start small
+            subscribers=random.randint(2, 10),  # new channels start small
             created_at=fake.date_this_decade().isoformat()
         )
         return channel
 
     @classmethod
-    def create_video(cls, channel_id: str) -> YouTubeVideo:
+    def create_video(cls, channel: YoutubeChannel) -> YouTubeVideo:
+        date = datetime.datetime.now()
         video = YouTubeVideo(
             video_id=str(uuid.uuid4()),
-            channel_id=channel_id,
+            channel_id=channel.channel_id,
+            channel_name=channel.name,
+            channel_subscribers=channel.subscribers,
             description=fake.text(max_nb_chars=100),
             total_views=random.randint(2, 50),  # small start
             total_likes=random.randint(0, 10),
             total_dislikes=random.randint(0, 2),
-            date_created=fake.date_this_year().isoformat()
+            date_created=date,
+            date_updated=date
         )
         return video
 
@@ -61,8 +65,18 @@ class Simulator:
             v.total_views += random.randint(1, 200)
             v.total_likes += random.randint(0, 20)
             v.total_dislikes += random.randint(0, 5)
+            v.date_updated = datetime.datetime.now()
             updated_videos.append(v)
+            print(v.date_updated)
         return updated_videos
+    
+    @classmethod
+    def update_channel_stats(cls):
+        """Incrementally update views/likes/dislikes for existing videos"""
+        channel = random.choice(cls.channels)
+        channel.subscribers += random.randint(0, 10)
+        
+    
         
 
     @classmethod
@@ -79,7 +93,7 @@ class Simulator:
                 # new video under existing channel
                 new_videos = []
                 channel = random.choice(cls.channels)
-                new_vid = cls.create_video(channel.channel_id)
+                new_vid = cls.create_video(channel)
                 cls.videos.append(new_vid)
                 new_videos.append(new_vid)
                 print(f"New video created under {channel.name}")

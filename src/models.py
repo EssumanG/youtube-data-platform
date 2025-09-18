@@ -18,9 +18,11 @@ class YoutubeChannel:
 class YouTubeVideo:
     video_id: str
     channel_id: str
+    channel_name: str
+    channel_subscribers: int
     description: str
     total_views: int
     total_likes: int
     total_dislikes: int
     date_created: str
-
+    date_updated: str

@@ -6,6 +6,9 @@ import time
 from simulator import Simulator
 from utils import write_videos_to_csv, connect_minio
 import datetime
+from models import YouTubeVideo
+from typing import List
+import copy
 
 
 
@@ -26,11 +29,19 @@ if __name__ == "__main__":
 
     while True:
         # update stats
+            # update stats
         new_updates = simulator.update_video_stats()
 
+        # snapshot each updated video so later mutations don't overwrite them
+        snapshot_updates = [copy.deepcopy(v) for v in new_updates]
+
         # maybe create new channels/videos
-        new_vidoes = simulator.maybe_add_channel_or_video()
-        buffer.extend(new_updates + new_vidoes)
+        new_videos = simulator.maybe_add_channel_or_video()
+        snapshot_new_videos = [copy.deepcopy(v) for v in new_videos]
+
+        # add snapshots to buffer
+        buffer += (snapshot_updates + snapshot_new_videos)
+        print("buffer", buffer)
    
         # check if 10 minutes have passed
         if time.time() - last_flush >= BATCH_INTERVAL:
@@ -40,7 +51,7 @@ if __name__ == "__main__":
                 buffer.clear()
             last_flush = time.time()  # reset timer
 
-        print(f"Buffered {len(buffer)} updates so far "
+        print(f"Buffered {len(buffer)} updates so far ",
               f"(total: {len(simulator.videos)} videos, {len(simulator.channels)} channels)")
 
         time.sleep(random.randint(10, 30))  # wait before next update

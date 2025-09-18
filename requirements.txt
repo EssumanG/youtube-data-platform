@@ -3,3 +3,4 @@ minio
 apache-airflow-providers-amazon
 pandas
 s3fs
+pyarrow

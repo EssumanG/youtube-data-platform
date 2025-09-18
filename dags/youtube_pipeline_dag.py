@@ -85,7 +85,36 @@ def youtube_pipeline():
                 }) for f in files["valid_files"]]
         
         df = pd.concat(dfs, ignore_index=True)
-        print(df.head(10))
+
+        df["date_created"] = pd.to_datetime(df["date_created"])
+        df["date_updated"] = pd.to_datetime(df["date_updated"])
+        df = df.set_index("date_updated")
+        # df = df[["video_id", "description", "channel_name", "total_views", "total_likes", "total_dislikes"]]
+
+        trend_30s = (
+            df.groupby(["description", "channel_name"]).resample("30S")
+            .agg({
+                "video_id": "count",           # number of videos uploaded
+                "total_views": "max",          # total views
+                "total_likes": "max",
+                "total_dislikes": "max",
+            })
+            .rename(columns={"video_id": "video_count"}).reset_index()
+        )
+        
+        channel_stats = (
+            df.groupby("channel_name") \
+                .agg(
+                total_videos=("video_id", "count"),
+                total_views=("total_views", "sum"),
+                avg_views=("total_views", "mean"),
+                avg_likes=("total_likes", "mean"),
+                avg_dislikes=("total_dislikes", "mean")
+            )
+        )
+
+        return trend_30s, channel_stats
+
 
 
     @task()

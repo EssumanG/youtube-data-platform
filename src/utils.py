@@ -22,11 +22,11 @@ def write_videos_to_csv(videos: List[YouTubeVideo], minio_client:Minio):
 
     csv_buffer = io.StringIO()
     writer = csv.writer(csv_buffer)
-    writer.writerow(["video_id", "channel_id", "description", "total_views", "total_likes", "total_dislikes", "date_created"])
-    
+    writer.writerow(["video_id", "channel_id", "channel_name", "channel_subscribers", "description", "total_views", "total_likes", "total_dislikes", "date_created", "date_updated"])
+    print("all vidioes", videos)
     for v in videos:
-        writer.writerow([v.video_id, v.channel_id, v.description, v.total_views, v.total_likes, v.total_dislikes, v.date_created])
-
+        writer.writerow([v.video_id, v.channel_id, v.channel_name, v.channel_subscribers, v.description, v.total_views, v.total_likes, v.total_dislikes, v.date_created, v.date_updated])
+        print(v.date_updated)
     csv_buffer.seek(0)
 
     minio_client.put_object(
