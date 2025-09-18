@@ -15,9 +15,16 @@ services:
 
   scheduler:
     container_name: scheduler
+    networks:
+      - mini-proj_6dcc03_airflow
+      - project_net
 
   triggerer:
     container_name: triggerer
+    networks:
+      - mini-proj_6dcc03_airflow
+      - project_net
+
 
   postgres:
     container_name: postgres

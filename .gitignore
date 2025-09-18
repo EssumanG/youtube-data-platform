@@ -14,3 +14,5 @@ minio-data
 *.csv
 .vscode
 vevnv/
+
+.sonar/
