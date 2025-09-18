@@ -2,14 +2,17 @@ from airflow.decorators import dag, task
 from airflow.datasets import Dataset
 from pendulum import datetime
 from minio import Minio
+from etl.utils import connect_minio
+import os
 
 # Configure MinIO client (adjust endpoint & creds in Airflow Connections instead of hardcoding)
-minio_client = Minio(
-    endpoint="minio:9000",
-    access_key="admin",
-    secret_key="password1234",
-    secure=False,
-)
+
+MINIO_BUCKET_NAME = os.getenv('MINIO_BUCKET_NAME')
+MINIO_ROOT_USER = os.getenv('MINIO_ROOT_USER')
+MINIO_ROOT_PASSWARD = os.getenv('MINIO_ROOT_PASSWARD')
+MINIO_DOCKER_NAME = os.getenv('MINIO_DOCKER_NAME')
+MINIO_DOCKER_PORT = os.getenv('MINIO_DOCKER_PORT')
+endpoint_url = f"http://{MINIO_DOCKER_NAME}:{MINIO_DOCKER_PORT}" 
 
 @dag(
     start_date=datetime(2024, 1, 1),
@@ -27,25 +30,79 @@ def youtube_pipeline():
         Check for new batch data in MinIO bucket.
         (In real case: replace with S3 sensor or a polling mechanism)
         """
-        bucket_name = "datalake"
-        objects = list(minio_client.list_objects(bucket_name, recursive=True))
-        print(f"Found {len(objects)} files in {bucket_name}")
+        minio_client = connect_minio()
+        objects = list(minio_client.list_objects(MINIO_BUCKET_NAME, recursive=True))
+        print(f"Found {len(objects)} files in {MINIO_BUCKET_NAME}")
         return [obj.object_name for obj in objects]
 
     @task()
-    def print_file_info(files: list):
+    def validate_task(file: str):
         """
         Print info of the files: name, size, and last modified
         """
-        bucket_name = "datalake"
-        for file in files:
-            obj = minio_client.stat_object(bucket_name, file)
-            print(
-                f"File: {file}, Size: {obj.size}, LastModified: {obj.last_modified}"
-            )
+        import pandas as pd
+        s3_object_path = f"s3://{MINIO_BUCKET_NAME}/{file}"
+        print(f"Validating file: s3://{s3_object_path}")
+        try:
+            df = pd.read_csv(
+                s3_object_path,
+                storage_options={
+                    "key": MINIO_ROOT_USER,
+                    "secret": MINIO_ROOT_PASSWARD,
+                    "client_kwargs": {"endpoint_url": endpoint_url}
+                })
+
+            required_columns = {"video_id", "description", "channel_id", "total_likes", "total_dislikes", "date_created"}
+            if not required_columns.issubset(set(df.columns)):
+                print(f"Missing required columns in {s3_object_path}")
+                return {"file": file, "is_valid":False}
+
+           
+            print("validation passed")
+            return {"file": file, "is_valid":True}
+        except Exception as e:
+            print(f"Validation failed for {file} in bucket {MINIO_BUCKET_NAME}: {e}")
+            return {"file": file, "is_valid":False}
+
+    @task()
+    def aggregate_results(results: list[dict]):
+        """Split validated results into valid and invalid lists"""
+        valid = [r["file"] for r in results if r["is_valid"]]
+        invalid = [r for r in results if not r["is_valid"]]
+        return {"valid_files": valid, "invalid_files": invalid}
+    
+
+    @task()
+    def transform_task(files: dict):
+        import pandas as pd
+        print("Transforming:", files["valid_files"])
+        dfs = [pd.read_csv(
+                f"s3://{MINIO_BUCKET_NAME}/{f}",
+                storage_options={
+                    "key": MINIO_ROOT_USER,
+                    "secret": MINIO_ROOT_PASSWARD,
+                    "client_kwargs": {"endpoint_url": endpoint_url}
+                }) for f in files["valid_files"]]
+        
+        df = pd.concat(dfs, ignore_index=True)
+        print(df.head(10))
+
+
+    @task()
+    def quarantine_task(files: dict):
+        print("Quarantining:", files["invalid_files"])
+
+    # @task()
+    # def load_task():
+    #     pass
+
+    
 
     file_list = get_batch_data()
-    print_file_info(file_list)
+    validated_data = validate_task.expand(file=file_list)
+    aggregated = aggregate_results(validated_data)
 
+    transform_task(aggregated)
+    quarantine_task(aggregated)
 
 dag = youtube_pipeline()
