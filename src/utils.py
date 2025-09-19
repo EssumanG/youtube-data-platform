@@ -17,7 +17,7 @@ MINIO_PORT = os.getenv('MINIO_PORT')
 
 
 def write_videos_to_csv(videos: List[YouTubeVideo], minio_client:Minio):
-    object_name = f"vidoes_data__{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    object_name = f"raw/vidoes_data__{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
 
     csv_buffer = io.StringIO()
