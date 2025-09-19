@@ -37,7 +37,7 @@ def youtube_pipeline():
 
     @task()
     def aggregate_result_tasks(results: list[dict]):
-        return aggregate_results
+        return aggregate_results(results)
     
 
     @task()

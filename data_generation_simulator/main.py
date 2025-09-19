@@ -34,7 +34,7 @@ def main():
         last_flush = time.time()
 
         # Batch flush interval (600s = 10 minutes)
-        BATCH_INTERVAL = os.getenv("BATCH_INTERVAL")
+        BATCH_INTERVAL = float(os.getenv("BATCH_INTERVAL"))
         minio_client = connect_minio()
 
         while True:
