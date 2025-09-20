@@ -15,7 +15,7 @@ load_dotenv()
 MINIO_ROOT_USER = os.getenv('MINIO_ROOT_USER')
 MINIO_ROOT_PASSWARD = os.getenv('MINIO_ROOT_PASSWARD')
 MINIO_BUCKET_NAME = os.getenv('MINIO_BUCKET_NAME')
-MINIO_LOCALHOST = os.getenv('MINIO_LOCALHOST')
+MINIO_HOST = os.getenv('MINIO_LOCALHOST')
 MINIO_PORT = os.getenv('MINIO_PORT')
 
 
@@ -82,7 +82,7 @@ def connect_minio() -> Minio | None:
     try:
         # Initialize MinIO client
         client = Minio(
-            endpoint=f"{MINIO_LOCALHOST}:{MINIO_PORT}",
+            endpoint=f"{MINIO_HOST}:{MINIO_PORT}",
             access_key=MINIO_ROOT_USER,
             secret_key=MINIO_ROOT_PASSWARD,
             secure=False
@@ -98,7 +98,7 @@ def connect_minio() -> Minio | None:
 
     except S3Error as e:
         logging.error(f"MinIO S3Error occurred: {e}", exc_info=True)
-        return None
+        raise S3Error("MinIO S3Error occurred")
     except Exception as e:
         logging.error(f"Unexpected error while connecting to MinIO: {e}", exc_info=True)
-        return None
+        raise RuntimeError("Something happened while connecting to MinIO")

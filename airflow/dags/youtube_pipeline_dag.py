@@ -9,6 +9,7 @@ from etl.utils import MINIO_BUCKET_NAME
 from etl.utils import (
     MINIO_BUCKET_NAME, MINIO_ROOT_USER, MINIO_ROOT_PASSWARD, endpoint_url
 )
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 
 # Configure MinIO client (adjust endpoint & creds in Airflow Connections instead of hardcoding)
@@ -25,6 +26,18 @@ raw_bucker_dir=f"{MINIO_BUCKET_NAME}/raw"
     tags=["youtube"],
 )
 def youtube_pipeline():
+    
+    sensor_minio_s3 = S3KeySensor(
+        task_id="sensor_minio_s3",
+        bucket_name="datalake",  
+        bucket_key="raw/*.csv",
+        wildcard_match=True,
+        aws_conn_id="minio_conn",
+        mode="poke",
+        poke_interval=10,
+        timeout=60,
+        soft_fail=True
+    )
 
     @task()
     def extract_task():
@@ -62,6 +75,8 @@ def youtube_pipeline():
 
     
 
+    
+    
     file_list = extract_task()
     validated_data = validate_task.expand(file=file_list)
     aggregated = aggregate_result_tasks(validated_data)
@@ -70,7 +85,8 @@ def youtube_pipeline():
     quarantine_task(aggregated)
     archive_data = archive_task(aggregated)
     load_to_postgres_task.expand(file_info=transform_result)
-
+    
+    sensor_minio_s3 >> file_list
     transform_result  >> archive_data
 
 dag = youtube_pipeline()

@@ -19,6 +19,7 @@ endpoint_url = f"http://{MINIO_DOCKER_NAME}:{MINIO_DOCKER_PORT}"
 def connect_minio() -> Minio:
     """Initialize and return a MinIO client."""
     try:
+        print(MINIO_BUCKET_NAME, MINIO_ROOT_USER, MINIO_ROOT_PASSWARD, MINIO_DOCKER_NAME, MINIO_DOCKER_PORT)
         client = Minio(
             endpoint=f"{MINIO_DOCKER_NAME}:{MINIO_DOCKER_PORT}",
             access_key=MINIO_ROOT_USER,
@@ -28,5 +29,8 @@ def connect_minio() -> Minio:
         logger.info("MinIO client initialized")
         return client
     except S3Error as e:
+        logger.error(f"Failed to connect to MinIO: {e}")
+        raise
+    except Exception as e:
         logger.error(f"Failed to connect to MinIO: {e}")
         raise
