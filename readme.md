@@ -66,8 +66,8 @@ The platform demonstrating the four core layer of a data pipeline:
 
 2. Clone this repo
 ```bash
-git clone https://github.com/your-username/mini-data-platform.git
-cd mini-data-platform
+git clone https://github.com/EssumanG/youtube-data-platform.git
+cd youtube-data-platform
 ```
 3. Set envronment variables.
 Create a .env file in the project root directory and copy the evnironment in the the **`example.env`** and paste in the .env file
