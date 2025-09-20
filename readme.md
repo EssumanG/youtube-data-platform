@@ -1,6 +1,11 @@
-# Mini Data Platform
-This project sets up a basic data platform using Astronomer Airflow
+# Mini Data Platform - YouTube Data Platform
 
+The **YouTube Mini Data Platform** is an end-to-end demo pipeline that simulates YouTube video statistics. Data is generated, stored in MinIO, processed with Airflow, loaded into PostgreSQL, and visualized in Metabase. It showcases the core stages of a modern data platform—collect, process, store, and visualize—in a lightweight, reproducible setup.
+
+## Oveview
+A simulated data generator produces periodic snapshots of YouTube video and channel statistics, which are ingested into an S3-like object store (MinIO). From there, Apache Airflow orchestrates validation, transformation, and loading of the data into PostgreSQL. Finally, Metabase provides an interactive analytics layer, enabling users to explore trends, identify top channels, and monitor video performance over time.
+
+---
 The platform demonstrating the four core layer of a data pipeline:
 1. Collect Data
 2. Process Data 
@@ -42,7 +47,7 @@ The platform demonstrating the four core layer of a data pipeline:
         4. **Load**: Insert transformed datasets into PostgreSQL tables.
         5. **Archive**: Move processed raw files into an archive/ folder in MinIO.
 
-    !["Succesful run dag"](./imgs/dag.png)
+    !["Succesful run dag"](./docs/imgs/dag.png)
 
 4. ### **PostgresSQL**
     - Stores transformed datasets for downstream analytics.
@@ -57,7 +62,7 @@ The platform demonstrating the four core layer of a data pipeline:
         - Top 5 most subscribed channels
         - Top 10 most liked videos
         image below show the dash board sample view
-    !["Succesful run dag"](./imgs/dashboard.png)
+    !["Succesful run dag"](./docs/imgs/dashboard.png)
 
 ## Setup
 1. Install Dependancies
@@ -76,9 +81,17 @@ Create a .env file in the project root directory and copy the evnironment in the
     
     (Note: In airflow_settings.py, replace variables with those from your .env file.)
 
+    the minio IP address found using the following command
+
+    ```
+    docker ps        # find minio ID or name
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <container_id_or_name>
+    ```
+
 5. Start the platform
 
     ```
+     set -a && source ../.env && set +a
     astro dev start -e ../.env
     ```
 
@@ -87,9 +100,10 @@ Create a .env file in the project root directory and copy the evnironment in the
     - **Airflow** → http://localhost:8080
     - **PostgreSQL** → connect via pgAdmin/DBeaver
     - **MinIO** → http://localhost:9101
-    - **Metabase** → http://localhost:3000
+    - **Metabase** → http://localhost:3000 => *NB:login info can be found in example.env file*
 
     *NB: Check Airflow UI to confirm connections. If missing, update manually.*
+
 
 6. Start the simulator
     ```bash

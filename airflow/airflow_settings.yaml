@@ -10,21 +10,23 @@ airflow:
     - conn_id: psql_conn
       conn_type: postgres
       conn_host: postgres-db
-      conn_schema: test_database
-      conn_login: test_user
-      conn_password: test_password1234
+      conn_schema: ${POSTGRES_DATABASE}
+      conn_login: ${POSTGRES_USER}
+      conn_password: ${POSTGRES_PASSWORD}
       conn_port: 5432
 
     - conn_id: minio_conn
       conn_type: aws
-      login: ${MINIO_ROOT_USER}
-      password: ${MINIO_ROOT_PASSWARD}
-      conn_extra:
-        - example_extra_field:
-        - aws_access_key_id: ${MINIO_ROOT_USER}
-        - aws_secret_access_key: ${MINIO_ROOT_PASSWARD}
-        - host: "http://192.168.0.4:9000"
-        - endpoint_url: "http://192.168.0.4:9000"
+      conn_login: ${MINIO_ROOT_USER}
+      conn_password: ${MINIO_ROOT_PASSWARD}
+      conn_port: 9000
+      conn_extra: |
+        {
+          "aws_access_key_id": "${MINIO_ROOT_USER}",
+          "aws_secret_access_key": "${MINIO_ROOT_PASSWARD}",
+          "host": "http://<MINIO_IP>:9000",
+          "endpoint_url": "http://<MINIO_IP>:9000"
+        }
 
 
   pools:
