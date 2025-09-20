@@ -112,9 +112,9 @@ services:
   #   volumes:
   #     - ./logs/datagen:/app/logs 
 
-# networks:
-#   mini-proj_6dcc03_airflow:
-#     external: True
+networks:
+  # mini-proj_6dcc03_airflow:
+  #   external: True
 
   project_net:
     name: project_net
