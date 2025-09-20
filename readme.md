@@ -2,7 +2,7 @@
 
 The **YouTube Mini Data Platform** is an end-to-end demo pipeline that simulates YouTube video statistics. Data is generated, stored in MinIO, processed with Airflow, loaded into PostgreSQL, and visualized in Metabase. It showcases the core stages of a modern data platform—collect, process, store, and visualize—in a lightweight, reproducible setup.
 
-## Oveview
+## Overview
 A simulated data generator produces periodic snapshots of YouTube video and channel statistics, which are ingested into an S3-like object store (MinIO). From there, Apache Airflow orchestrates validation, transformation, and loading of the data into PostgreSQL. Finally, Metabase provides an interactive analytics layer, enabling users to explore trends, identify top channels, and monitor video performance over time.
 
 ---
