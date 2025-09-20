@@ -18,8 +18,8 @@ from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 raw_bucker_dir=f"{MINIO_BUCKET_NAME}/raw"
 
 @dag(
-    start_date=datetime(2024, 1, 1),
-    schedule=None,
+    start_date=datetime(2025, 9, 1),
+    schedule="*/10 * * * *",
     catchup=False,
     doc_md=__doc__,
     default_args={"owner": "Essuman", "retries": 3},

@@ -19,6 +19,7 @@ The platform demonstrating the four core layer of a data pipeline:
     - Simulates YouTube video datasets (channels, videos, stats).
     - Periodically generates new CSV snapshots of updated video statistics.
     - Uploads CSVs to MinIO (acting as raw storage).
+    - batch interval is set to 10min
 
 2. ### **Minio**
     - Acts as the object store (S3-compatible).
@@ -30,7 +31,7 @@ The platform demonstrating the four core layer of a data pipeline:
 
 3. ### **Airflow (via Astro CLI)** 
     - Orchestrates the end-to-end pipeline.
-    - DAG workflow (triggered when new files arrive in MinIO – trigger mechanism pending):
+    - DAG Workflow (Scheduled for every 10 min, with S3KeySensor waiting for uploads):
         1. **Extract**: Batch raw CSV files from MinIO.
         2. **Validate**: Check schema/columns.
             - Valid files → transformation
@@ -41,18 +42,22 @@ The platform demonstrating the four core layer of a data pipeline:
         4. **Load**: Insert transformed datasets into PostgreSQL tables.
         5. **Archive**: Move processed raw files into an archive/ folder in MinIO.
 
+    !["Succesful run dag"](./imgs/dag.png)
+
 4. ### **PostgresSQL**
     - Stores transformed datasets for downstream analytics.
     - Two key tables (from current design):
         - `video_metrics` (trend data at 30s intervals)
         - `channel_stats` (aggregated per channel)
 
-5. ### **Metabase (planned)**
+5. ### **Metabase**
     - Will be used to visualize the data stored in PostgreSQL.
-    - Planned dashboards:
-        - Trending videos over time
-        - Channel growth insights
-        - Engagement (likes/dislikes vs views)
+    - Viusal found on the dashboard dashboards:
+        - Trending videos over time( with ists, total like, view and channel name)
+        - Top 5 most subscribed channels
+        - Top 10 most liked videos
+        image below show the dash board sample view
+    !["Succesful run dag"](./imgs/dashboard.png)
 
 ## Setup
 1. Install Dependancies
@@ -67,32 +72,49 @@ cd mini-data-platform
 3. Set envronment variables.
 Create a .env file in the project root directory and copy the evnironment in the the **`example.env`** and paste in the .env file
 
-4. Start the platform
-```
-astro dev
-```
-This will spin up the services below:
-    - Airflow (scheduler, webserver, workers)
-    - PostgreSQL
-    - MinIO
-    - (Metabase container can be added later)
-- 
+4. Update values as needed in the airflow_settings.yaml.
+    
+    (Note: In airflow_settings.py, replace variables with those from your .env file.)
+
+5. Start the platform
+
+    ```
+    astro dev start -e ../.env
+    ```
+
+    This will start:
+
+    - **Airflow** → http://localhost:8080
+    - **PostgreSQL** → connect via pgAdmin/DBeaver
+    - **MinIO** → http://localhost:9101
+    - **Metabase** → http://localhost:3000
+
+    *NB: Check Airflow UI to confirm connections. If missing, update manually.*
+
+6. Start the simulator
+    ```bash
+    cd ../data_generation_simulator 
+
+    python main..py
+    ```
 
 ---
 
 ### Project Sructure
 
 ```
-├── dags/                        # Airflow DAG definitions
-├── etl/                         # Extract, validate, transform, load helpers
-│   ├── extract.py
-│   ├── validate.py
-│   ├── transform.py
-│   ├── load.py
-│   ├── move_files.py
-│   └── archive.py
-├── simulator/                   # Data generator scripts
-├── docker-compose.override.yml  # Extra service configs (Postgres, MinIO, etc.)
+├── airflow/                         # Extract, validate, transform, load helpers
+│   ├── etl/                         # Extract, validate, transform, load helpers
+│   │   ├── extract.py
+│   │   ├── validate.py
+│   │   ├── transform.py
+│   │   ├── load.py
+│   │   ├── move_files.py
+│   │   └── archive.py
+│   ├── dags/                        # Airflow DAG definitions
+|   ├── airflow_seettings.yaml 
+│   └── docker-compose.override.yml  # Extra service configs (Postgres, MinIO, etc.)
+├── data_generation_simulator/                   # Data generator service
 ├── .env                         # Environment variables
 └── README.md
 ```
@@ -144,6 +166,4 @@ Aggregated statistics per channel.
 
 ## Next Steps
 - Containerize the data generator
-- Implement event-based DAG triggering on MinIO upload
-- Add Metabase service and dashboards
 - Automate CI/CD for Airflow DAGs and ETL scripts

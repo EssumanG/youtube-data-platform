@@ -15,17 +15,18 @@ airflow:
       conn_password: test_password1234
       conn_port: 5432
 
-    - conn_id: minio_s3
+    - conn_id: minio_conn
       conn_type: aws
-      login: admin
-      password: password1234
-      extra: |
-        {
-          "aws_access_key_id": "admin",
-          "aws_secret_access_key": "password1234",
-          "host": "http://192.168.0.4:9000",
-          "endpoint_url": "http://192.168.0.4:9000"
-        }
+      login: ${MINIO_ROOT_USER}
+      password: ${MINIO_ROOT_PASSWARD}
+      conn_extra:
+        - example_extra_field:
+        - aws_access_key_id: ${MINIO_ROOT_USER}
+        - aws_secret_access_key: ${MINIO_ROOT_PASSWARD}
+        - host: "http://192.168.0.4:9000"
+        - endpoint_url: "http://192.168.0.4:9000"
+
+
   pools:
     - pool_name:
       pool_slot:
