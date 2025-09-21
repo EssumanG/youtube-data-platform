@@ -19,6 +19,8 @@ The platform demonstrating the four core layer of a data pipeline:
 - **MinIO**:  - file storage (like AWS S3)
 - **Metabase**: creates charts and reports
 
+### System Architecture
+!["System Architecture"](./docs/imgs/system_architecture.png)
 ## Services Overview
 1. ### **Data Generator**
     - Simulates YouTube video datasets (channels, videos, stats).
